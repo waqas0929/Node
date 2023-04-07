@@ -1,4 +1,4 @@
 const mongoose = require("mongoose");
 mongoose.connect(
-  "mongodb+srv://e-commerce:*****@cluster0.rb5edjt.mongodb.net/?retryWrites=true&w=majority"
+  "mongodb+srv://Node:PYSoIo3037XJTsj3@cluster0.dynzbty.mongodb.net/Node"
 );
