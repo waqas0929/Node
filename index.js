@@ -20,6 +20,4 @@ app.post("/login", async (req, resp) => {
   resp.send(user);
 });
 
-console.log("taha here");
-
 app.listen(3001);
