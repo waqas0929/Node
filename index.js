@@ -7,4 +7,6 @@ app.post("./register", (req, resp) => {
   resp.send("");
 });
 
+console.log("taha here");
+
 app.listen(3001);
