@@ -1,10 +1,11 @@
 const express = require("express");
 require("./db/config");
 const User = require("./db/User");
-const app = express();
 
-// const Jwt = require(jsonwebtoken);
-// const jswtKey = "e-com";
+const Jwt = require("jsonwebtoken");
+const jwtKey = "e-com";
+
+const app = express();
 
 app.use(express.json());
 
@@ -22,7 +23,9 @@ app.post("/login", async (req, resp) => {
   if (req.body.email) {
     let user = await User.findOne(req.body);
     if (user) {
-      resp.send(user);
+      Jwt.sign({ user }, jwtKey, (err, token) => {
+        resp.send({ user, auth: token });
+      });
     } else {
       resp.send({ result: "User Not Found" });
     }
