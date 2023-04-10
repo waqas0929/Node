@@ -32,4 +32,16 @@ app.post("/login", async (req, resp) => {
   }
 });
 
+app.get("/user/:userId", async (req, resp) => {
+  try {
+    let user = await User.findById(req.params.userId);
+    if (!user) {
+      return resp.status(404).send({ message: "User Not Found" });
+    }
+    resp.send(user);
+  } catch (error) {
+    resp.send(500).send({ message: error.message });
+  }
+});
+
 app.listen(3001);
