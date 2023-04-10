@@ -20,8 +20,11 @@ app.post("/register", async (req, resp) => {
 });
 
 app.post("/login", async (req, resp) => {
-  if (req.body.email) {
-    let user = await User.findOne(req.body);
+  const { email, password } = req.body;
+  if (!email || !password) {
+    resp.send({ result: "Please enter email and password" });
+  } else {
+    let user = await User.findOne({ email, password });
     if (user) {
       Jwt.sign({ user }, jwtKey, (err, token) => {
         resp.send({ user, auth: token });
@@ -31,7 +34,6 @@ app.post("/login", async (req, resp) => {
     }
   }
 });
-
 app.get("/user/:userId", async (req, resp) => {
   try {
     let user = await User.findById(req.params.userId);
