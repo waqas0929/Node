@@ -20,20 +20,23 @@ app.post("/register", async (req, resp) => {
 });
 
 app.post("/login", async (req, resp) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    resp.send({ result: "Please enter email and password" });
-  } else {
-    let user = await User.findOne({ email, password });
+  if (req.body.email && req.body.password) {
+    let user = await User.findOne({
+      email: req.body.email,
+      password: req.body.password,
+    });
     if (user) {
       Jwt.sign({ user }, jwtKey, (err, token) => {
         resp.send({ user, auth: token });
       });
     } else {
-      resp.send({ result: "User Not Found" });
+      resp.send({ result: "INVALID EMAIL OR PASSWORD" });
     }
+  } else {
+    resp.send({ result: "Email and password are required" });
   }
 });
+
 app.get("/user/:userId", async (req, resp) => {
   try {
     let user = await User.findById(req.params.userId);
