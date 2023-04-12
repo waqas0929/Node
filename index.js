@@ -1,6 +1,7 @@
 const express = require("express");
 require("./db/config");
 const User = require("./db/User");
+const { authenticateToken } = require("./middleware/auth");
 
 const Jwt = require("jsonwebtoken");
 const jwtKey = "e-com";
@@ -32,15 +33,15 @@ app.post("/login", async (req, resp) => {
   }
 });
 
-app.get("/user/:userId", async (req, resp) => {
+app.get("/user/my", authenticateToken, async (req, resp) => {
   try {
-    let user = await User.findById(req.params.userId);
+    let user = await User.findById(req.user.id);
     if (!user) {
       return resp.status(404).send({ message: "User Not Found" });
     }
     resp.send(user);
   } catch (error) {
-    resp.send(500).send({ message: error.message });
+    resp.status(500).send({ message: error.message });
   }
 });
 
