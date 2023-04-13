@@ -21,15 +21,20 @@ app.post("/register", async (req, resp) => {
 });
 
 app.post("/login", async (req, resp) => {
-  if (req.body.email) {
-    let user = await User.findOne(req.body);
+  if (req.body.email && req.body.password) {
+    let user = await User.findOne({
+      email: req.body.email,
+      password: req.body.password,
+    });
     if (user) {
       Jwt.sign({ user }, jwtKey, (err, token) => {
         resp.send({ user, auth: token });
       });
     } else {
-      resp.send({ result: "User Not Found" });
+      resp.send({ result: "INVALID EMAIL OR PASSWORD" });
     }
+  } else {
+    resp.send({ result: "Email and password are required" });
   }
 });
 
