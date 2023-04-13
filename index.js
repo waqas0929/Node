@@ -12,14 +12,18 @@ app.use(express.json());
 
 app.post("/register", async (req, resp) => {
   try {
-    let user = new User(req.body);
-    let result = await user.save();
-    resp.send(result);
+    let existingUser = await User.findOne({ email: req.body.email });
+    if (existingUser) {
+      resp.send({ message: "Email is already register" });
+    } else {
+      let user = new User(req.body);
+      let result = await user.save();
+      resp.send(result);
+    }
   } catch (error) {
     resp.status(404).send({ message: error.message });
   }
 });
-
 app.post("/login", async (req, resp) => {
   if (req.body.email && req.body.password) {
     let user = await User.findOne({
