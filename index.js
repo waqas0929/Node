@@ -5,10 +5,10 @@ const { authenticateToken } = require("./middleware/auth");
 const bcrypt = require("bcrypt");
 
 const Jwt = require("jsonwebtoken");
-const jwtKey = "e-com";
+const jwtKey = "login";
 
-const compareString = async (string, encryptedString) => {
-  await bcrypt.compare(string, encryptedString);
+const compareString = (string, encryptedString) => {
+  return bcrypt.compareSync(string, encryptedString);
 };
 
 const app = express();
@@ -18,7 +18,7 @@ app.use(express.json());
 const encryptString = async (string) => {
   const salt = await bcrypt.genSalt(10);
 
-  return bcrypt.hash(string, salt);
+  return bcrypt.hashSync(string, salt);
 };
 
 app.post("/register", async (req, resp) => {
@@ -28,11 +28,12 @@ app.post("/register", async (req, resp) => {
       resp.send({ message: "Email is already register" });
     } else {
       const hashedPassword = await encryptString(req.body.password);
-      let user = new User({
+
+      let result = await User.create({
         email: req.body.email,
         password: hashedPassword,
+        previousPasswords: [{ password: hashedPassword, date: new Date() }],
       });
-      let result = await user.save();
       resp.send(result);
     }
   } catch (error) {
@@ -113,9 +114,11 @@ app.put("/user/my/password", authenticateToken, async (req, resp) => {
     // Check if the new password has been used before
 
     const previousPasswords = user.previousPasswords || [];
-    const isNewPasswordUsedBefore = previousPasswords.some((passwordObject) =>
-      bcrypt.compareSync(req.body.newPassword, passwordObject.password)
-    );
+    const isNewPasswordUsedBefore = previousPasswords
+      .map((passwordObject) => passwordObject.password)
+      .some((hashedPassword) =>
+        bcrypt.compareSync(req.body.newPassword, hashedPassword)
+      );
 
     if (isNewPasswordUsedBefore) {
       return resp
@@ -129,15 +132,20 @@ app.put("/user/my/password", authenticateToken, async (req, resp) => {
 
     // Save the new password and update the previous passwords list
 
-    if (previousPasswords.length >= 12) {
+    if (previousPasswords.length >= 10) {
       previousPasswords.pop();
     }
     user.password = hashedPassword;
     user.previousPasswords = [
-      { password: hashedPassword, date: new Date() },
       ...previousPasswords,
+      { password: user.password, date: new Date() },
     ];
-    const result = await user.save();
+
+    // //add password to password history
+    user.password = [{ password: user.password, date: new Date() }];
+
+    user.password = hashedPassword;
+    await user.save();
 
     resp.send({ message: "Password Changed Successfully" });
   } catch (error) {
@@ -146,3 +154,10 @@ app.put("/user/my/password", authenticateToken, async (req, resp) => {
 });
 
 app.listen(3001);
+
+// (async () => {
+//   const encrypted = await encryptString("taha");
+
+//   const resp = await compareString("taha", encrypted);
+//   debugger;
+// })();

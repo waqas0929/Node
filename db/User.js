@@ -64,46 +64,46 @@ const userSchema = new mongoose.Schema({
 });
 
 // Use the middleware function to update the documents on the fly
-userSchema.pre("validate", async function (next) {
-  const user = this;
+// userSchema.pre("validate", async function (next) {
+//   const user = this;
 
-  // Check if the document matches the old schema
-  if (!user.previousPasswords) {
-    // Add any missing fields to the document
-    user.previousPasswords = [];
-  }
+//   // Check if the document matches the old schema
+//   if (!user.previousPasswords) {
+//     // Add any missing fields to the document
+//     user.previousPasswords = [];
+//   }
 
-  next();
-});
+//   next();
+// });
 
 // Define the pre-save hook to hash the password and save old password
-userSchema.pre("save", async function (next) {
-  const user = this;
+// userSchema.pre("save", async function (next) {
+//   const user = this;
 
-  if (user.isModified("password")) {
-    const salt = await bcrypt.genSalt();
-    user.password = await bcrypt.hash(user.password, salt);
+//   if (user.isModified("password")) {
+//     const salt = await bcrypt.genSalt();
+//     user.password = await bcrypt.hash(user.password, salt);
 
-    //save old password
-    if (user.previousPasswords.length >= 5) {
-      user.previousPasswords.pop();
-    }
-    user.previousPasswords = [
-      { password: user.password, date: new Date() },
-      ...user.previousPasswords,
-    ];
-  }
-  next();
-});
+//     //save old password
+//     if (user.previousPasswords.length >= 5) {
+//       user.previousPasswords.pop();
+//     }
+//     user.previousPasswords = [
+//       { password: user.password, date: new Date() },
+//       ...user.previousPasswords,
+//     ];
+//   }
+//   next();
+// });
 
 // Define the method to compare the password
-userSchema.methods.comparePassword = async function (password) {
-  try {
-    const isMatch = await bcrypt.compare(password, this.password);
-    return isMatch;
-  } catch (error) {
-    throw new Error(error);
-  }
-};
+// userSchema.methods.comparePassword = async function (password) {
+//   try {
+//     const isMatch = await bcrypt.compare(password, this.password);
+//     return isMatch;
+//   } catch (error) {
+//     throw new Error(error);
+//   }
+// };
 
 module.exports = mongoose.model("users", userSchema);
