@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const jwtKey = "e-com";
+const jwtKey = "login";
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];

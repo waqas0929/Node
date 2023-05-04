@@ -3,6 +3,7 @@ require("./db/config");
 const User = require("./db/User");
 const { authenticateToken } = require("./middleware/auth");
 const bcrypt = require("bcrypt");
+const axios = require("axios");
 
 const Jwt = require("jsonwebtoken");
 const jwtKey = "login";
@@ -88,13 +89,20 @@ app.put("/user/my/password", authenticateToken, async (req, resp) => {
       return resp.status(404).send({ message: "User Not Found" });
     }
 
-    // check if old password is entered correctly
-    if (!req.body.oldPassword || !req.body.newPassword) {
-      return resp
-        .status(400)
-        .send({ message: "Please Enter both old and new Password" });
+    const now = new Date();
+    const timeDifference = now - user.lastPasswordChangeAttempt;
+
+    const minutesDifference = timeDifference / (1000 * 60);
+
+    // check if the user has made more then password change 3 attempts with in the last five minutes
+    if (user.passwordChangeAttempts >= 3 && minutesDifference < 5) {
+      return resp.status(400).send({ message: "Please retry after 5 minutes" });
     }
 
+    //reset the password change attempts count if the last password change attempt was more than 5 minutes
+    if (minutesDifference >= 5) {
+      user.passwordChangeAttempts = 0;
+    }
     const isOldPasswordCorrect = await compareString(
       req.body.oldPassword,
       user.password
@@ -141,6 +149,9 @@ app.put("/user/my/password", authenticateToken, async (req, resp) => {
       { password: user.password, date: new Date() },
     ];
 
+    user.passwordChangeAttempts += 1;
+    user.lastPasswordChangeAttempt = now;
+
     // //add password to password history
     user.password = [{ password: user.password, date: new Date() }];
 
@@ -152,12 +163,17 @@ app.put("/user/my/password", authenticateToken, async (req, resp) => {
     resp.status(500).send({ message: error.message });
   }
 });
+app.get("/weather", authenticateToken, async (req, res) => {
+  const { lat, lon } = req.query;
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${31.582045}&lon=${74.283552}&appid=f0d5ef72a9784272ae229d496634a984&units=metric`;
+  try {
+    const response = await axios.get(url);
+    const data = response.data;
+    res.send(data);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Error getting weather information");
+  }
+});
 
 app.listen(3001);
-
-// (async () => {
-//   const encrypted = await encryptString("taha");
-
-//   const resp = await compareString("taha", encrypted);
-//   debugger;
-// })();
