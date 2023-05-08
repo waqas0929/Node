@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+// const bcrypt = require("bcrypt");
 
 // Define the old schema for the user document
 const oldUserSchema = new mongoose.Schema({

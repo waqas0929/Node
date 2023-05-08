@@ -1,9 +1,9 @@
 const express = require("express");
-require("./db/config");
-const User = require("./db/User");
-const { authenticateToken } = require("./middleware/auth");
+require("../db/config");
+const User = require("../db/User");
+const { authenticateToken } = require("../middleware/auth");
+const weather = require("./weather.js");
 const bcrypt = require("bcrypt");
-const axios = require("axios");
 
 const Jwt = require("jsonwebtoken");
 const jwtKey = "login";
@@ -24,9 +24,17 @@ const encryptString = async (string) => {
 
 app.post("/register", async (req, resp) => {
   try {
+    const emailRegax = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegax.test(req.body.email)) {
+      return resp
+        .status(400)
+        .send({ message: "Please enter valid email address" });
+    }
     let existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) {
       resp.send({ message: "Email is already register" });
+    } else if (!req.body.password) {
+      resp.status(400).send({ message: "Password is required" });
     } else {
       const hashedPassword = await encryptString(req.body.password);
 
@@ -163,17 +171,8 @@ app.put("/user/my/password", authenticateToken, async (req, resp) => {
     resp.status(500).send({ message: error.message });
   }
 });
-app.get("/weather", authenticateToken, async (req, res) => {
-  const { lat, lon } = req.query;
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${31.582045}&lon=${74.283552}&appid=f0d5ef72a9784272ae229d496634a984&units=metric`;
-  try {
-    const response = await axios.get(url);
-    const data = response.data;
-    res.send(data);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Error getting weather information");
-  }
-});
+
+// use the weather module as a middleware
+app.use("/", weather);
 
 app.listen(3001);
